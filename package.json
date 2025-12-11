@@ -1,0 +1,29 @@
+{
+  "name": "travel-expense-app",
+  "version": "1.0.0",
+  "description": "旅行费用分摊App",
+  "main": "index.js",
+  "scripts": {
+    "start": "node mock-api-server.js",
+    "dev": "node mock-api-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "travel",
+    "expense",
+    "sharing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.15.3",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
