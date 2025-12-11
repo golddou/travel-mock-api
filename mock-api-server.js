@@ -34,11 +34,42 @@ const sequelize = new Sequelize(
     dialect: 'mysql', // 数据库类型
     timezone: '+08:00',// 时区
     logging: (msg) => {
-      // 过滤掉包含十六进制地址的日志
-      if (!/0x[0-9a-fA-F]+/g.test(msg)) {
-        console.log(msg);
+      // 在Vercel环境中只记录重要日志
+      if (process.env.VERCEL) {
+        // Vercel环境中只记录错误和重要信息
+        if (msg.includes('ERROR') || msg.includes('FAILED')) {
+          console.log(msg);
+        }
+      } else {
+        // 本地环境记录所有日志，但过滤掉十六进制地址
+        if (!/0x[0-9a-fA-F]+/g.test(msg)) {
+          console.log(msg);
+        }
       }
     }, // 自定义日志过滤
+    // 优化连接池配置，适合Vercel Serverless环境
+    pool: {
+      max: 5,           // 最大连接数
+      min: 0,           // 最小连接数
+      acquire: 30000,   // 获取连接的超时时间
+      idle: 10000       // 连接空闲超时时间
+    },
+    // 连接超时设置
+    dialectOptions: {
+      connectTimeout: 10000,  // 连接超时
+      socketTimeout: 10000    // 套接字超时
+    },
+    // 重试配置
+    retry: {
+      match: [
+        /ER_LOCK_DEADLOCK/,  // 死锁重试
+        /ECONNREFUSED/,     // 连接拒绝重试
+        /ETIMEDOUT/         // 超时重试
+      ],
+      max: 3,               // 最大重试次数
+      backoffBase: 1000,    // 基础重试延迟
+      backoffExponent: 1.5  // 重试延迟乘数
+    }
   }
 );
 
@@ -339,9 +370,35 @@ async function syncDatabase() {
 
 // API端点
 
-// 健康检查
+// 健康检查 - 快速响应，不依赖数据库
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'HELLOWORLD from MySQL API server!' });
+  res.status(200).json({
+    status: 'ok',
+    message: 'API服务器正常运行',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '1.0.0'
+  });
+});
+
+// 数据库健康检查 - 检查数据库连接
+app.get('/health/db', async (req, res) => {
+  try {
+    // 测试数据库连接
+    await sequelize.authenticate();
+    res.status(200).json({
+      status: 'ok',
+      message: '数据库连接正常',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: '数据库连接失败',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // 调试端点：查看表结构

@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "mock-api-server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "mock-api-server.js"
+    }
+  ],
+  "functions": {
+    "mock-api-server.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
+}
