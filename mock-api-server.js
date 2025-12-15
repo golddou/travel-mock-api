@@ -1,8 +1,11 @@
+const mysql = require('mysql2/promise');
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const mysql = require('mysql2/promise');
 const { Sequelize, DataTypes, Op } = require('sequelize');
+
+console.log('✅ mysql2 已成功引入');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,43 +35,30 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || 'mysql2.sqlpub.com',// 主机地址
     port: process.env.DB_PORT || 3307,       // 端口号
     dialect: 'mysql', // 数据库类型
+    dialectModule: require('mysql2'), // 明确指定mysql2驱动模块
     timezone: '+08:00',// 时区
     logging: (msg) => {
-      // 在Vercel环境中只记录重要日志
+      // 在Vercel环境中记录所有日志，便于调试
       if (process.env.VERCEL) {
-        // Vercel环境中只记录错误和重要信息
-        if (msg.includes('ERROR') || msg.includes('FAILED')) {
-          console.log(msg);
-        }
+        console.log('[DB]', msg);
       } else {
         // 本地环境记录所有日志，但过滤掉十六进制地址
         if (!/0x[0-9a-fA-F]+/g.test(msg)) {
-          console.log(msg);
+          console.log('[DB]', msg);
         }
       }
     }, // 自定义日志过滤
     // 优化连接池配置，适合Vercel Serverless环境
     pool: {
-      max: 5,           // 最大连接数
+      max: 2,           // 减少最大连接数，Serverless环境不需要太多连接
       min: 0,           // 最小连接数
-      acquire: 30000,   // 获取连接的超时时间
-      idle: 10000       // 连接空闲超时时间
+      acquire: 15000,   // 增加获取连接超时时间
+      idle: 5000        // 减少空闲连接超时
     },
     // 连接超时设置
     dialectOptions: {
-      connectTimeout: 10000,  // 连接超时
-      socketTimeout: 10000    // 套接字超时
-    },
-    // 重试配置
-    retry: {
-      match: [
-        /ER_LOCK_DEADLOCK/,  // 死锁重试
-        /ECONNREFUSED/,     // 连接拒绝重试
-        /ETIMEDOUT/         // 超时重试
-      ],
-      max: 3,               // 最大重试次数
-      backoffBase: 1000,    // 基础重试延迟
-      backoffExponent: 1.5  // 重试延迟乘数
+      connectTimeout: 15000,  // 增加连接超时时间
+      socketTimeout: 15000    // 增加套接字超时时间
     }
   }
 );
