@@ -11,11 +11,5 @@
       "src": "/(.*)",
       "dest": "mock-api-server.js"
     }
-  ],
-  "functions": {
-    "mock-api-server.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  }
+  ]
 }
