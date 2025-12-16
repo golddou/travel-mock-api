@@ -2855,18 +2855,18 @@ app.get('/api/trips/:tripId/budgets/usage', authenticateToken, async (req, res) 
   }
 });
 
-// 启动服务器
-async function startServer() {
+// 在本地环境中直接启动服务器
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   // 同步数据库
-  await syncDatabase();
-  
-  // 启动Express服务器
-  app.listen(PORT, () => {
-    console.log(`MySQL API Server is running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`API base URL: http://localhost:${PORT}/api`);
+  syncDatabase().then(() => {
+    // 启动Express服务器
+    app.listen(PORT, () => {
+      console.log(`MySQL API Server is running on port ${PORT}`);
+      console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`API base URL: http://localhost:${PORT}/api`);
+    });
   });
 }
 
-// 启动服务器
-startServer();
+// 导出请求处理函数，供Vercel使用
+module.exports = app;
