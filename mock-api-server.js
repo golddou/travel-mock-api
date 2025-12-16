@@ -52,13 +52,18 @@ const sequelize = new Sequelize(
     pool: {
       max: 2,           // 减少最大连接数，Serverless环境不需要太多连接
       min: 0,           // 最小连接数
-      acquire: 15000,   // 增加获取连接超时时间
+      acquire: 30000,   // 增加获取连接超时时间，适合远程数据库
       idle: 5000        // 减少空闲连接超时
     },
     // 连接超时设置
     dialectOptions: {
-      connectTimeout: 15000,  // 增加连接超时时间
-      socketTimeout: 15000    // 增加套接字超时时间
+      connectTimeout: 30000,  // 增加连接超时时间，适合远程数据库
+      socketTimeout: 30000,   // 增加套接字超时时间
+      // SSL配置，支持Aiven.io等需要SSL的数据库
+      ssl: {
+        require: true,
+        rejectUnauthorized: false // 禁用证书验证，解决部分SSL连接问题
+      }
     }
   }
 );
